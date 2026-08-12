@@ -9,19 +9,17 @@ export default function App() {
   const [viewState, setViewState] = useState('welcome'); // 'welcome' | 'interview' | 'summary'
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answerText, setAnswerText] = useState('');
-  const [answers, setAnswers] = useState([]);
   const [validationError, setValidationError] = useState('');
+  const [results, setResults] = useState([]); // stores objects with question, reference, userAnswer, score, feedback
 
-  // Start interview from Welcome screen
   const handleStartInterview = () => {
     setCurrentQuestionIndex(0);
     setAnswerText('');
-    setAnswers([]);
     setValidationError('');
+    setResults([]);
     setViewState('interview');
   };
 
-  // Answer text change handler
   const handleAnswerChange = (val) => {
     setAnswerText(val);
     if (validationError && val.trim() !== '') {
@@ -29,25 +27,9 @@ export default function App() {
     }
   };
 
-  // Next / Submit Question handler
-  const handleNextQuestion = () => {
-    if (!answerText.trim()) {
-      setValidationError('Please enter your answer before continuing.');
-      return;
-    }
-
-    const currentQuestion = questions[currentQuestionIndex];
-    const updatedAnswers = [
-      ...answers,
-      {
-        id: currentQuestion.id,
-        question: currentQuestion.question,
-        answer: answerText.trim()
-      }
-    ];
-
-    setAnswers(updatedAnswers);
-
+  const handleSubmitResult = (completed) => {
+    // completed includes {id, question, reference, userAnswer, score, feedback}
+    setResults((prev) => [...prev, completed]);
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
       setAnswerText('');
@@ -57,21 +39,19 @@ export default function App() {
     }
   };
 
-  // Exit interview handler
   const handleExitInterview = () => {
     setViewState('welcome');
     setCurrentQuestionIndex(0);
     setAnswerText('');
-    setAnswers([]);
+    setResults([]);
     setValidationError('');
   };
 
-  // Restart interview handler
   const handleRestartInterview = () => {
     setViewState('welcome');
     setCurrentQuestionIndex(0);
     setAnswerText('');
-    setAnswers([]);
+    setResults([]);
     setValidationError('');
   };
 
@@ -118,14 +98,14 @@ export default function App() {
           answerText={answerText}
           onChangeAnswer={handleAnswerChange}
           validationError={validationError}
-          onNextQuestion={handleNextQuestion}
           onExitInterview={handleExitInterview}
+          onSubmitResult={handleSubmitResult}
         />
       )}
 
       {viewState === 'summary' && (
         <InterviewSummary
-          answers={answers}
+          answers={results}
           onRestart={handleRestartInterview}
         />
       )}

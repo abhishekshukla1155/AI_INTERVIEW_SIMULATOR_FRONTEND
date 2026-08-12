@@ -46,7 +46,7 @@ export default function InterviewSummary({ answers, onRestart }) {
 
         {showDetails && (
           <div className="summary-list">
-            <h3 className="summary-list-title">Submitted Responses ({answers.length})</h3>
+            <h3 className="summary-list-title">Evaluation Results ({answers.length})</h3>
 
             {answers.map((item, index) => (
               <div key={item.id || index} className="summary-item">
@@ -58,6 +58,12 @@ export default function InterviewSummary({ answers, onRestart }) {
                   <span className="user-answer-label">Your Answer:</span>
                   <p className="user-answer-text">{item.answer}</p>
                 </div>
+                {item.score !== undefined && (
+                  <div className="summary-feedback-box">
+                    <div className="score-badge">Score: {item.score}/10</div>
+                    {item.feedback && <p className="feedback-text"><em>Feedback:</em> {item.feedback}</p>}
+                  </div>
+                )}
               </div>
             ))}
           </div>
