@@ -1,0 +1,39 @@
+.evaluation-result {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.evaluation-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+  text-align: center;
+  color: #00e0ff;
+}
+
+.evaluation-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.evaluation-score {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.evaluation-feedback strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: #ffdd57;
+}
+
+.evaluation-feedback p {
+  margin: 0;
+  line-height: 1.4;
+}
