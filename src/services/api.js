@@ -37,3 +37,22 @@ export async function evaluateAnswer(question, reference, user) {
   }
   return data;
 }
+
+/**
+ * Fetches all interview questions from the FastAPI /questions endpoint.
+ * @returns {Promise<Array<{id: number, question: string, reference: string}>>}
+ */
+export async function fetchQuestions() {
+  const response = await fetch(`${API_BASE_URL}/questions`);
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to fetch questions: ${response.status} ${errorText}`);
+  }
+
+  const data = await response.json();
+  if (!Array.isArray(data)) {
+    throw new Error("Invalid response format from /questions API");
+  }
+  return data;
+}

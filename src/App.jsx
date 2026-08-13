@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { questions } from './data/questions';
+import { fetchQuestions } from './services/api';
 import WelcomeScreen from './components/WelcomeScreen';
 import InterviewScreen from './components/InterviewScreen';
 import InterviewSummary from './components/InterviewSummary';
 import './App.css';
+
+const INTERVIEW_SIZE = 5;
 
 export default function App() {
   const [viewState, setViewState] = useState('welcome'); // 'welcome' | 'interview' | 'summary'
@@ -11,13 +13,42 @@ export default function App() {
   const [answerText, setAnswerText] = useState('');
   const [validationError, setValidationError] = useState('');
   const [results, setResults] = useState([]); // stores objects with question, reference, userAnswer, score, feedback
+  const [activeQuestions, setActiveQuestions] = useState([]);
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
+  const [fetchError, setFetchError] = useState('');
 
-  const handleStartInterview = () => {
-    setCurrentQuestionIndex(0);
-    setAnswerText('');
-    setValidationError('');
-    setResults([]);
-    setViewState('interview');
+  const shuffleArray = (array) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
+  const handleStartInterview = async () => {
+    setIsLoadingQuestions(true);
+    setFetchError('');
+    try {
+      const allQuestions = await fetchQuestions();
+      if (!allQuestions || allQuestions.length === 0) {
+        throw new Error("No questions available from backend");
+      }
+      const shuffled = shuffleArray(allQuestions);
+      const selected = shuffled.slice(0, INTERVIEW_SIZE);
+
+      setActiveQuestions(selected);
+      setCurrentQuestionIndex(0);
+      setAnswerText('');
+      setValidationError('');
+      setResults([]);
+      setViewState('interview');
+    } catch (err) {
+      console.error(err);
+      setFetchError("Unable to load interview questions. Please make sure the AI server is running.");
+    } finally {
+      setIsLoadingQuestions(false);
+    }
   };
 
   const handleAnswerChange = (val) => {
@@ -30,7 +61,7 @@ export default function App() {
   const handleSubmitResult = (completed) => {
     // completed includes {id, question, reference, userAnswer, score, feedback}
     setResults((prev) => [...prev, completed]);
-    if (currentQuestionIndex < questions.length - 1) {
+    if (currentQuestionIndex < activeQuestions.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
       setAnswerText('');
       setValidationError('');
@@ -45,6 +76,7 @@ export default function App() {
     setAnswerText('');
     setResults([]);
     setValidationError('');
+    setFetchError('');
   };
 
   const handleRestartInterview = () => {
@@ -53,6 +85,7 @@ export default function App() {
     setAnswerText('');
     setResults([]);
     setValidationError('');
+    setFetchError('');
   };
 
   return (
@@ -80,21 +113,25 @@ export default function App() {
         <div className="backend-status-badge">
           <span className="pulse-dot"></span>
           <span>
-            {viewState === 'interview' ? `Question ${currentQuestionIndex + 1} / ${questions.length}` : 'AI Backend Ready'}
+            {viewState === 'interview' ? `Question ${currentQuestionIndex + 1} / ${activeQuestions.length}` : 'AI Backend Ready'}
           </span>
         </div>
       </header>
 
       {/* Dynamic Views */}
       {viewState === 'welcome' && (
-        <WelcomeScreen onStartInterview={handleStartInterview} />
+        <WelcomeScreen 
+          onStartInterview={handleStartInterview} 
+          isLoading={isLoadingQuestions}
+          error={fetchError}
+        />
       )}
 
-      {viewState === 'interview' && (
+      {viewState === 'interview' && activeQuestions.length > 0 && (
         <InterviewScreen
-          question={questions[currentQuestionIndex]}
+          question={activeQuestions[currentQuestionIndex]}
           currentIndex={currentQuestionIndex}
-          totalQuestions={questions.length}
+          totalQuestions={activeQuestions.length}
           answerText={answerText}
           onChangeAnswer={handleAnswerChange}
           validationError={validationError}

@@ -1,4 +1,4 @@
-export default function WelcomeScreen({ onStartInterview }) {
+export default function WelcomeScreen({ onStartInterview, isLoading, error }) {
   return (
     <main className="hero-wrapper">
       <div className="hero-pill">
@@ -18,24 +18,38 @@ export default function WelcomeScreen({ onStartInterview }) {
           id="start-interview-btn" 
           className="btn-primary" 
           onClick={onStartInterview}
+          disabled={isLoading}
         >
-          <span>Start Interview</span>
-          <svg className="btn-icon-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-            <polyline points="12 5 19 12 12 19"></polyline>
-          </svg>
+          <span>{isLoading ? 'Loading interview questions...' : 'Start Interview'}</span>
+          {!isLoading && (
+            <svg className="btn-icon-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          )}
         </button>
 
-        <div className="ai-notice-card">
-          <div className="ai-icon-pulse">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+        {error ? (
+          <div className="validation-error-msg" role="alert" style={{ justifyContent: 'center', marginTop: '0.5rem' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
             </svg>
+            <span>{error}</span>
           </div>
-          <span>
-            Your responses will be evaluated using our trained <strong>DistilBERT NLP engine</strong> for technical accuracy and feedback.
-          </span>
-        </div>
+        ) : (
+          <div className="ai-notice-card">
+            <div className="ai-icon-pulse">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+              </svg>
+            </div>
+            <span>
+              Your responses will be evaluated using our trained <strong>DistilBERT NLP engine</strong> for technical accuracy and feedback.
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Feature Cards Grid */}
