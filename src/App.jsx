@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { fetchQuestions } from './services/api';
+import { questions as localQuestions } from './data/questions';
+import { getRandomQuestions } from './utils/questionSelector';
 import WelcomeScreen from './components/WelcomeScreen';
 import InterviewScreen from './components/InterviewScreen';
 import InterviewSummary from './components/InterviewSummary';
 import './App.css';
 
-const INTERVIEW_SIZE = 5;
+const INTERVIEW_QUESTION_COUNT = 5;
 
 export default function App() {
   const [viewState, setViewState] = useState('welcome'); // 'welcome' | 'interview' | 'summary'
@@ -17,38 +19,40 @@ export default function App() {
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
   const [fetchError, setFetchError] = useState('');
 
-  const shuffleArray = (array) => {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  };
-
   const handleStartInterview = async () => {
     setIsLoadingQuestions(true);
     setFetchError('');
-    try {
-      const allQuestions = await fetchQuestions();
-      if (!allQuestions || allQuestions.length === 0) {
-        throw new Error("No questions available from backend");
-      }
-      const shuffled = shuffleArray(allQuestions);
-      const selected = shuffled.slice(0, INTERVIEW_SIZE);
 
-      setActiveQuestions(selected);
-      setCurrentQuestionIndex(0);
-      setAnswerText('');
-      setValidationError('');
-      setResults([]);
-      setViewState('interview');
+    let questionPool = localQuestions;
+
+    try {
+      // Attempt fetching from backend if available
+      const remoteQuestions = await fetchQuestions();
+      if (remoteQuestions && remoteQuestions.length > 0) {
+        questionPool = remoteQuestions;
+      }
     } catch (err) {
-      console.error(err);
-      setFetchError("Unable to load interview questions. Please make sure the AI server is running.");
+      console.warn("Backend /questions unavailable, using local question bank:", err.message);
+      // Clean fallback to local question bank if API call fails
+      questionPool = localQuestions;
     } finally {
       setIsLoadingQuestions(false);
     }
+
+    if (!questionPool || questionPool.length === 0) {
+      setFetchError("Unable to load interview questions. Please check question bank configuration.");
+      return;
+    }
+
+    // Select random non-repeating set of questions for current session
+    const selected = getRandomQuestions(questionPool, INTERVIEW_QUESTION_COUNT);
+
+    setActiveQuestions(selected);
+    setCurrentQuestionIndex(0);
+    setAnswerText('');
+    setValidationError('');
+    setResults([]);
+    setViewState('interview');
   };
 
   const handleAnswerChange = (val) => {
@@ -80,12 +84,7 @@ export default function App() {
   };
 
   const handleRestartInterview = () => {
-    setViewState('welcome');
-    setCurrentQuestionIndex(0);
-    setAnswerText('');
-    setResults([]);
-    setValidationError('');
-    setFetchError('');
+    handleStartInterview();
   };
 
   return (

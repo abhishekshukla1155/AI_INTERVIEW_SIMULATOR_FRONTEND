@@ -2,7 +2,9 @@ export default function QuestionCard({ questionObj, answerText, onChangeAnswer, 
   return (
     <div className="question-card">
       <div className="question-header">
-        <span className="question-tag">Technical Question #{questionObj.id}</span>
+        <span className="question-tag">
+          {questionObj.category ? `${questionObj.category} • Question #${questionObj.id}` : `Technical Question #${questionObj.id}`}
+        </span>
         <h2 className="question-title">{questionObj.question}</h2>
       </div>
 
