@@ -24,7 +24,7 @@ export default function InterviewSummary({ answers, onRestart }) {
               <line x1="12" y1="16" x2="12" y2="12"></line>
               <line x1="12" y1="8" x2="12.01" y2="8"></line>
             </svg>
-            <span>AI scoring via FastAPI + DistilBERT backend will be enabled in Phase 3.</span>
+            <span>AI scoring is active via FastAPI + DistilBERT backend.</span>
           </div>
         </div>
 
@@ -56,7 +56,7 @@ export default function InterviewSummary({ answers, onRestart }) {
                 </div>
                 <div className="summary-user-answer-box">
                   <span className="user-answer-label">Your Answer:</span>
-                  <p className="user-answer-text">{item.answer}</p>
+                  <p className="user-answer-text">{item.userAnswer}</p>
                 </div>
                 {item.score !== undefined && (
                   <div className="summary-feedback-box">
