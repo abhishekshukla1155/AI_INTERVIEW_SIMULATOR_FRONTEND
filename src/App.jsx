@@ -1,29 +1,47 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { fetchQuestions } from './services/api';
 import { questions as localQuestions } from './data/questions';
 import { filterAndSelectQuestions } from './utils/questionSelector';
+import { saveInterviewHistory, getInterviewHistory } from './utils/interviewHistory';
 import WelcomeScreen from './components/WelcomeScreen';
 import InterviewSetup from './components/InterviewSetup';
 import InterviewScreen from './components/InterviewScreen';
 import InterviewSummary from './components/InterviewSummary';
+import InterviewHistory from './components/InterviewHistory';
 import './App.css';
 
 export default function App() {
-  const [viewState, setViewState] = useState('welcome'); // 'welcome' | 'setup' | 'interview' | 'summary'
+  const [viewState, setViewState] = useState('welcome'); // 'welcome' | 'setup' | 'interview' | 'summary' | 'history'
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answerText, setAnswerText] = useState('');
   const [validationError, setValidationError] = useState('');
   const [results, setResults] = useState([]); // stores objects with question, reference, userAnswer, score, feedback, category
   const [activeQuestions, setActiveQuestions] = useState([]);
   const [interviewConfig, setInterviewConfig] = useState({ category: 'Machine Learning', difficulty: 'Medium', count: 5 });
+  const [currentSessionId, setCurrentSessionId] = useState('');
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
   const [fetchError, setFetchError] = useState('');
   const [setupWarning, setSetupWarning] = useState('');
+  const [historyCount, setHistoryCount] = useState(0);
+
+  // Sync history count
+  const refreshHistoryCount = () => {
+    const list = getInterviewHistory();
+    setHistoryCount(list.length);
+  };
+
+  useEffect(() => {
+    refreshHistoryCount();
+  }, [viewState]);
 
   const handleGoToSetup = () => {
     setFetchError('');
     setSetupWarning('');
     setViewState('setup');
+  };
+
+  const handleGoToHistory = () => {
+    setViewState('history');
   };
 
   const handleStartInterview = async ({ category, difficulty, count }) => {
@@ -32,12 +50,15 @@ export default function App() {
     setFetchError('');
     setSetupWarning('');
 
+    // Generate a unique session ID for duplicate protection
+    const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    setCurrentSessionId(newSessionId);
+
     let questionPool = localQuestions;
 
     try {
       // Attempt fetching from backend if available
       const remoteQuestions = await fetchQuestions();
-      // Verify that remote questions include required metadata
       const hasMetadata = remoteQuestions && remoteQuestions.length > 0 &&
         remoteQuestions[0].hasOwnProperty('difficulty') &&
         remoteQuestions[0].hasOwnProperty('category');
@@ -76,6 +97,7 @@ export default function App() {
     }
 
     console.log('[Interview Setup]', {
+      SessionId: newSessionId,
       Topic: category,
       Difficulty: difficulty,
       Requested: requestedCount,
@@ -108,24 +130,49 @@ export default function App() {
   };
 
   const handleSubmitResult = (completed) => {
-    // completed includes {id, question, reference, userAnswer, score, feedback, category}
     const currentQ = activeQuestions[currentQuestionIndex];
     const fullResult = {
       ...completed,
       category: currentQ?.category || interviewConfig.category
     };
 
-    setResults((prev) => [...prev, fullResult]);
+    const updatedResults = [...results, fullResult];
+    setResults(updatedResults);
+
     if (currentQuestionIndex < activeQuestions.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
       setAnswerText('');
       setValidationError('');
     } else {
+      // ── Entire interview finished! Calculate final score & save to history ──
+      const totalScoreSum = updatedResults.reduce(
+        (acc, item) => acc + (typeof item.score === 'number' ? item.score : 0),
+        0
+      );
+      const avgScore = updatedResults.length > 0 ? totalScoreSum / updatedResults.length : 0;
+      const roundedScore = Number(avgScore.toFixed(1));
+
+      const historyRecord = {
+        id: currentSessionId || `hist_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        sessionId: currentSessionId,
+        date: new Date().toISOString(),
+        topic: interviewConfig.category,
+        difficulty: interviewConfig.difficulty,
+        questionCount: activeQuestions.length,
+        score: roundedScore,
+        maxScore: 10,
+        answeredQuestions: updatedResults.length,
+        totalQuestions: activeQuestions.length
+      };
+
+      saveInterviewHistory(historyRecord);
+      refreshHistoryCount();
       setViewState('summary');
     }
   };
 
   const handleExitInterview = () => {
+    // Incomplete interviews are NOT saved to history
     setViewState('welcome');
     setCurrentQuestionIndex(0);
     setAnswerText('');
@@ -171,30 +218,50 @@ export default function App() {
           <span>AI Interviewer</span>
         </div>
 
-        <div className="backend-status-badge">
-          <span className="pulse-dot"></span>
-          <span>
-            {viewState === 'interview' ? `Question ${currentQuestionIndex + 1} / ${activeQuestions.length}` : 'AI Backend Ready'}
-          </span>
+        <div className="nav-controls" style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+          {viewState !== 'interview' && (
+            <button
+              id="view-history-btn"
+              type="button"
+              className={`btn-secondary ${viewState === 'history' ? 'active' : ''}`}
+              onClick={handleGoToHistory}
+              style={{ fontSize: '0.85rem', padding: '0.45rem 0.9rem' }}
+            >
+              📜 History ({historyCount})
+            </button>
+          )}
+
+          <div className="backend-status-badge">
+            <span className="pulse-dot"></span>
+            <span>
+              {viewState === 'interview' ? `Question ${currentQuestionIndex + 1} / ${activeQuestions.length}` : 'AI Backend Ready'}
+            </span>
+          </div>
         </div>
       </header>
 
       {/* Dynamic Views */}
       {viewState === 'welcome' && (
-        <WelcomeScreen 
-          onStartInterview={handleGoToSetup} 
-          isLoading={isLoadingQuestions}
-          error={fetchError}
-        />
+        <>
+          <WelcomeScreen 
+            onStartInterview={handleGoToSetup} 
+            isLoading={isLoadingQuestions}
+            error={fetchError}
+          />
+          <InterviewHistory onRefreshHistory={refreshHistoryCount} />
+        </>
       )}
 
       {viewState === 'setup' && (
-        <InterviewSetup
-          onStartInterview={handleStartInterview}
-          isLoading={isLoadingQuestions}
-          error={fetchError}
-          warning={setupWarning}
-        />
+        <>
+          <InterviewSetup
+            onStartInterview={handleStartInterview}
+            isLoading={isLoadingQuestions}
+            error={fetchError}
+            warning={setupWarning}
+          />
+          <InterviewHistory onRefreshHistory={refreshHistoryCount} />
+        </>
       )}
 
       {viewState === 'interview' && activeQuestions.length > 0 && (
@@ -211,11 +278,32 @@ export default function App() {
       )}
 
       {viewState === 'summary' && (
-        <InterviewSummary
-          answers={results}
-          config={interviewConfig}
-          onRestart={handleRestartInterview}
-        />
+        <>
+          <InterviewSummary
+            answers={results}
+            config={interviewConfig}
+            onRestart={handleRestartInterview}
+          />
+          <InterviewHistory onRefreshHistory={refreshHistoryCount} />
+        </>
+      )}
+
+      {viewState === 'history' && (
+        <main className="summary-wrapper" style={{ paddingBottom: '4rem' }}>
+          <InterviewHistory 
+            onClose={handleGoToSetup}
+            onRefreshHistory={refreshHistoryCount} 
+          />
+          <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+            <button 
+              type="button" 
+              className="btn-primary" 
+              onClick={handleGoToSetup}
+            >
+              Start New Interview
+            </button>
+          </div>
+        </main>
       )}
 
       {/* Footer */}
