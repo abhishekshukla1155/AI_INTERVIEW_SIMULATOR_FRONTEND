@@ -27,6 +27,7 @@ export default function App() {
   };
 
   const handleStartInterview = async ({ category, difficulty, count }) => {
+    const requestedCount = Number(count) || 5;
     setIsLoadingQuestions(true);
     setFetchError('');
     setSetupWarning('');
@@ -43,7 +44,7 @@ export default function App() {
       if (hasMetadata) {
         questionPool = remoteQuestions;
       } else {
-        console.warn('Remote questions missing metadata, falling back to local bank');
+        console.warn('Remote questions missing metadata or empty, using local question bank');
       }
     } catch (err) {
       console.warn("Backend /questions unavailable, using local question bank:", err.message);
@@ -58,11 +59,11 @@ export default function App() {
     }
 
     // Filter by Topic & Difficulty, then randomly select requested count
-    const { questions: selected, warning, error } = filterAndSelectQuestions(
+    const { questions: selected, availableCount, warning, error } = filterAndSelectQuestions(
       questionPool, 
       category, 
       difficulty, 
-      count
+      requestedCount
     );
 
     if (error) {
@@ -73,6 +74,17 @@ export default function App() {
     if (warning) {
       setSetupWarning(warning);
     }
+
+    console.log('[Interview Setup]', {
+      Topic: category,
+      Difficulty: difficulty,
+      Requested: requestedCount,
+      Available: availableCount,
+      Selected: selected.length
+    });
+    console.log('[Interview Started]', {
+      Questions: selected.length
+    });
 
     setInterviewConfig({
       category,
@@ -124,13 +136,17 @@ export default function App() {
   };
 
   const handleRestartInterview = () => {
-    setViewState('setup');
-    setCurrentQuestionIndex(0);
-    setAnswerText('');
-    setResults([]);
-    setValidationError('');
-    setFetchError('');
-    setSetupWarning('');
+    if (interviewConfig.category && interviewConfig.difficulty && interviewConfig.count) {
+      handleStartInterview(interviewConfig);
+    } else {
+      setViewState('setup');
+      setCurrentQuestionIndex(0);
+      setAnswerText('');
+      setResults([]);
+      setValidationError('');
+      setFetchError('');
+      setSetupWarning('');
+    }
   };
 
   return (

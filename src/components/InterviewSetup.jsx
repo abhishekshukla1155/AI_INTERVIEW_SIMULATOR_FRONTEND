@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { questions as localQuestions } from '../data/questions';
+import { getAvailableQuestionCount } from '../utils/questionSelector';
 
 export const TOPICS = [
   'Machine Learning',
@@ -28,6 +30,19 @@ export default function InterviewSetup({
   const [questionCount, setQuestionCount] = useState(5);
   const [validationMsg, setValidationMsg] = useState('');
 
+  // Calculate available matching questions in real-time
+  const availableCount = useMemo(() => {
+    return getAvailableQuestionCount(localQuestions, topic, difficulty);
+  }, [topic, difficulty]);
+
+  // Check if requested count exceeds available count
+  const isInsufficient = availableCount < questionCount;
+  const insufficientError = isInsufficient 
+    ? `Only ${availableCount} ${difficulty !== 'All Difficulties' ? difficulty : ''} ${topic !== 'All Topics' ? topic : ''} question${availableCount === 1 ? '' : 's'} available. Please choose a smaller number or another difficulty.` 
+    : '';
+
+  const activeError = validationMsg || error || insufficientError;
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setValidationMsg('');
@@ -40,6 +55,18 @@ export default function InterviewSetup({
       setValidationMsg('Please select a difficulty level.');
       return;
     }
+    if (availableCount < questionCount) {
+      setValidationMsg(insufficientError);
+      return;
+    }
+
+    console.log('[Interview Setup]', {
+      Topic: topic,
+      Difficulty: difficulty,
+      Requested: Number(questionCount),
+      Available: availableCount,
+      Selected: Number(questionCount)
+    });
 
     onStartInterview({
       category: topic,
@@ -62,6 +89,9 @@ export default function InterviewSetup({
           <p className="setup-subtitle">
             Configure your technical interview topic, difficulty level, and question volume.
           </p>
+          <div className="setup-availability-badge" style={{ marginTop: '0.75rem', fontSize: '0.9rem', color: '#a78bfa', fontWeight: '500' }}>
+            Available Questions: <strong>{availableCount}+</strong>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="setup-form">
@@ -122,37 +152,41 @@ export default function InterviewSetup({
               <span className="step-badge">Step 3</span>
             </label>
             <div className="segmented-control count-control">
-              {QUESTION_COUNTS.map((num) => (
-                <button
-                  type="button"
-                  key={num}
-                  className={`segmented-btn ${questionCount === num ? 'active' : ''}`}
-                  onClick={() => {
-                    setQuestionCount(num);
-                    setValidationMsg('');
-                  }}
-                  disabled={isLoading}
-                >
-                  {num} Questions
-                </button>
-              ))}
+              {QUESTION_COUNTS.map((num) => {
+                const countAvailable = availableCount >= num;
+                return (
+                  <button
+                    type="button"
+                    key={num}
+                    className={`segmented-btn ${questionCount === num ? 'active' : ''}`}
+                    onClick={() => {
+                      setQuestionCount(num);
+                      setValidationMsg('');
+                    }}
+                    disabled={isLoading}
+                    title={!countAvailable ? `Only ${availableCount} available` : ''}
+                  >
+                    {num} Questions {!countAvailable && `(${availableCount} avail)`}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           {/* Validation Error Messages */}
-          {(validationMsg || error) && (
+          {activeError && (
             <div className="validation-error-msg" role="alert" style={{ justifyContent: 'center', margin: '1rem 0' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="12" y1="8" x2="12" y2="12"></line>
                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
               </svg>
-              <span>{validationMsg || error}</span>
+              <span>{activeError}</span>
             </div>
           )}
 
           {/* Warning Message if available count < requested count */}
-          {warning && !error && !validationMsg && (
+          {warning && !activeError && (
             <div className="setup-warning-msg" role="status" style={{ justifyContent: 'center', margin: '0.75rem 0' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
@@ -168,7 +202,7 @@ export default function InterviewSetup({
             <button 
               type="submit" 
               className="btn-primary btn-start-interview"
-              disabled={isLoading}
+              disabled={isLoading || isInsufficient}
             >
               <span>{isLoading ? 'Preparing Questions...' : 'Start Interview'}</span>
               {!isLoading && (
