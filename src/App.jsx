@@ -36,8 +36,14 @@ export default function App() {
     try {
       // Attempt fetching from backend if available
       const remoteQuestions = await fetchQuestions();
-      if (remoteQuestions && remoteQuestions.length > 0) {
+      // Verify that remote questions include required metadata
+      const hasMetadata = remoteQuestions && remoteQuestions.length > 0 &&
+        remoteQuestions[0].hasOwnProperty('difficulty') &&
+        remoteQuestions[0].hasOwnProperty('category');
+      if (hasMetadata) {
         questionPool = remoteQuestions;
+      } else {
+        console.warn('Remote questions missing metadata, falling back to local bank');
       }
     } catch (err) {
       console.warn("Backend /questions unavailable, using local question bank:", err.message);
