@@ -1,27 +1,35 @@
 import { useState } from 'react';
 import { fetchQuestions } from './services/api';
 import { questions as localQuestions } from './data/questions';
-import { getRandomQuestions } from './utils/questionSelector';
+import { filterAndSelectQuestions } from './utils/questionSelector';
 import WelcomeScreen from './components/WelcomeScreen';
+import InterviewSetup from './components/InterviewSetup';
 import InterviewScreen from './components/InterviewScreen';
 import InterviewSummary from './components/InterviewSummary';
 import './App.css';
 
-const INTERVIEW_QUESTION_COUNT = 5;
-
 export default function App() {
-  const [viewState, setViewState] = useState('welcome'); // 'welcome' | 'interview' | 'summary'
+  const [viewState, setViewState] = useState('welcome'); // 'welcome' | 'setup' | 'interview' | 'summary'
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answerText, setAnswerText] = useState('');
   const [validationError, setValidationError] = useState('');
-  const [results, setResults] = useState([]); // stores objects with question, reference, userAnswer, score, feedback
+  const [results, setResults] = useState([]); // stores objects with question, reference, userAnswer, score, feedback, category
   const [activeQuestions, setActiveQuestions] = useState([]);
+  const [interviewConfig, setInterviewConfig] = useState({ category: 'Machine Learning', difficulty: 'Medium', count: 5 });
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
   const [fetchError, setFetchError] = useState('');
+  const [setupWarning, setSetupWarning] = useState('');
 
-  const handleStartInterview = async () => {
+  const handleGoToSetup = () => {
+    setFetchError('');
+    setSetupWarning('');
+    setViewState('setup');
+  };
+
+  const handleStartInterview = async ({ category, difficulty, count }) => {
     setIsLoadingQuestions(true);
     setFetchError('');
+    setSetupWarning('');
 
     let questionPool = localQuestions;
 
@@ -33,7 +41,6 @@ export default function App() {
       }
     } catch (err) {
       console.warn("Backend /questions unavailable, using local question bank:", err.message);
-      // Clean fallback to local question bank if API call fails
       questionPool = localQuestions;
     } finally {
       setIsLoadingQuestions(false);
@@ -44,8 +51,28 @@ export default function App() {
       return;
     }
 
-    // Select random non-repeating set of questions for current session
-    const selected = getRandomQuestions(questionPool, INTERVIEW_QUESTION_COUNT);
+    // Filter by Topic & Difficulty, then randomly select requested count
+    const { questions: selected, warning, error } = filterAndSelectQuestions(
+      questionPool, 
+      category, 
+      difficulty, 
+      count
+    );
+
+    if (error) {
+      setFetchError(error);
+      return;
+    }
+
+    if (warning) {
+      setSetupWarning(warning);
+    }
+
+    setInterviewConfig({
+      category,
+      difficulty,
+      count: selected.length
+    });
 
     setActiveQuestions(selected);
     setCurrentQuestionIndex(0);
@@ -63,8 +90,14 @@ export default function App() {
   };
 
   const handleSubmitResult = (completed) => {
-    // completed includes {id, question, reference, userAnswer, score, feedback}
-    setResults((prev) => [...prev, completed]);
+    // completed includes {id, question, reference, userAnswer, score, feedback, category}
+    const currentQ = activeQuestions[currentQuestionIndex];
+    const fullResult = {
+      ...completed,
+      category: currentQ?.category || interviewConfig.category
+    };
+
+    setResults((prev) => [...prev, fullResult]);
     if (currentQuestionIndex < activeQuestions.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
       setAnswerText('');
@@ -81,10 +114,17 @@ export default function App() {
     setResults([]);
     setValidationError('');
     setFetchError('');
+    setSetupWarning('');
   };
 
   const handleRestartInterview = () => {
-    handleStartInterview();
+    setViewState('setup');
+    setCurrentQuestionIndex(0);
+    setAnswerText('');
+    setResults([]);
+    setValidationError('');
+    setFetchError('');
+    setSetupWarning('');
   };
 
   return (
@@ -120,9 +160,18 @@ export default function App() {
       {/* Dynamic Views */}
       {viewState === 'welcome' && (
         <WelcomeScreen 
-          onStartInterview={handleStartInterview} 
+          onStartInterview={handleGoToSetup} 
           isLoading={isLoadingQuestions}
           error={fetchError}
+        />
+      )}
+
+      {viewState === 'setup' && (
+        <InterviewSetup
+          onStartInterview={handleStartInterview}
+          isLoading={isLoadingQuestions}
+          error={fetchError}
+          warning={setupWarning}
         />
       )}
 
@@ -142,6 +191,7 @@ export default function App() {
       {viewState === 'summary' && (
         <InterviewSummary
           answers={results}
+          config={interviewConfig}
           onRestart={handleRestartInterview}
         />
       )}

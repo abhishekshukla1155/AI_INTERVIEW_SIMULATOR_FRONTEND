@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function InterviewSummary({ answers = [], onRestart }) {
+export default function InterviewSummary({ answers = [], config = {}, onRestart }) {
   const [showDetails, setShowDetails] = useState(true);
 
   // 1. Dashboard Metric Calculations
@@ -47,6 +47,15 @@ export default function InterviewSummary({ answers = [], onRestart }) {
           <p className="summary-subtitle">
             Here is your AI-evaluated technical interview performance dashboard.
           </p>
+
+          {/* Configuration Summary Badges */}
+          {config.category && (
+            <div className="summary-config-badges">
+              <span className="summary-config-chip">Topic: <strong>{config.category}</strong></span>
+              <span className="summary-config-chip">Difficulty: <strong>{config.difficulty}</strong></span>
+              <span className="summary-config-chip">Questions: <strong>{totalQuestions}</strong></span>
+            </div>
+          )}
 
           <div className="phase3-notice-badge">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
