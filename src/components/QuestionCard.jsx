@@ -1,22 +1,48 @@
-export default function QuestionCard({ questionObj, answerText, onChangeAnswer, validationError }) {
+export default function QuestionCard({ questionObj, answerText, onChangeAnswer, validationError, onClearAnswer }) {
+  const charCount = answerText ? answerText.length : 0;
+
   return (
     <div className="question-card">
-      <div className="question-header">
-        <span className="question-tag">
-          {questionObj.category ? `${questionObj.category} • Question #${questionObj.id}` : `Technical Question #${questionObj.id}`}
-        </span>
+      <div className="question-card-header">
+        <div className="question-tags-row">
+          {questionObj.category && (
+            <span className="question-category-tag">{questionObj.category}</span>
+          )}
+          {questionObj.difficulty && (
+            <span className={`question-difficulty-tag diff-${questionObj.difficulty.toLowerCase()}`}>
+              {questionObj.difficulty}
+            </span>
+          )}
+          <span className="question-id-tag">Question #{questionObj.id}</span>
+        </div>
+
         <h2 className="question-title">{questionObj.question}</h2>
       </div>
 
       <div className="answer-wrapper">
-        <label htmlFor="interview-answer-input" className="answer-label">
-          Your Answer
-        </label>
+        <div className="answer-label-bar">
+          <label htmlFor="interview-answer-input" className="answer-label">
+            Your Technical Answer
+          </label>
+          <div className="answer-meta-right">
+            <span className="char-counter">{charCount} characters</span>
+            {answerText && onClearAnswer && (
+              <button 
+                type="button" 
+                className="btn-text-action" 
+                onClick={onClearAnswer}
+              >
+                Clear Answer
+              </button>
+            )}
+          </div>
+        </div>
+
         <textarea
           id="interview-answer-input"
           className={`answer-textarea ${validationError ? 'textarea-error' : ''}`}
-          rows="7"
-          placeholder="Type your response here... Be detailed and structure your thoughts clearly."
+          rows="8"
+          placeholder="Type your response here... Explain core concepts clearly and use examples where appropriate."
           value={answerText}
           onChange={(e) => onChangeAnswer(e.target.value)}
         ></textarea>

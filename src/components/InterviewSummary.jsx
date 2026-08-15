@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function InterviewSummary({ answers = [], config = {}, onRestart }) {
+export default function InterviewSummary({ answers = [], config = {}, onRestart, onGoToHistory }) {
   const [showDetails, setShowDetails] = useState(true);
 
   // 1. Dashboard Metric Calculations
@@ -11,14 +11,14 @@ export default function InterviewSummary({ answers = [], config = {}, onRestart 
   );
   
   const overallScoreNum = totalQuestions > 0 ? totalScoreSum / totalQuestions : 0;
-  const overallScore = overallScoreNum.toFixed(1); // e.g. "8.4"
-  const performancePct = Math.round((overallScoreNum / 10) * 100); // e.g. 84
+  const overallScore = overallScoreNum.toFixed(1);
+  const performancePct = Math.round((overallScoreNum / 10) * 100);
 
   // Performance Level classification
   const getPerformanceLevel = (pct) => {
-    if (pct >= 90) return { label: 'Excellent', classSuffix: 'excellent' };
-    if (pct >= 75) return { label: 'Very Good', classSuffix: 'very-good' };
-    if (pct >= 60) return { label: 'Good', classSuffix: 'good' };
+    if (pct >= 90) return { label: 'Excellent Performance', classSuffix: 'excellent' };
+    if (pct >= 75) return { label: 'Very Good Performance', classSuffix: 'very-good' };
+    if (pct >= 60) return { label: 'Good Performance', classSuffix: 'good' };
     if (pct >= 40) return { label: 'Needs Improvement', classSuffix: 'needs-imp' };
     return { label: 'Needs Significant Improvement', classSuffix: 'poor' };
   };
@@ -32,10 +32,16 @@ export default function InterviewSummary({ answers = [], config = {}, onRestart 
     return { classSuffix: 'low', label: 'Incorrect' };
   };
 
+  const formattedDate = new Date().toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
+
   return (
     <div className="summary-wrapper">
       <div className="summary-card">
-        {/* Header */}
+        {/* Main Scorecard Header */}
         <div className="summary-header">
           <div className="completed-badge">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -45,20 +51,29 @@ export default function InterviewSummary({ answers = [], config = {}, onRestart 
 
           <h2 className="summary-title">Interview Completed!</h2>
           <p className="summary-subtitle">
-            Here is your AI-evaluated technical interview performance dashboard.
+            Here is your AI-evaluated technical interview performance breakdown.
           </p>
 
-          {/* Configuration Summary Badges */}
-          {config.category && (
-            <div className="summary-config-badges">
-              <span className="summary-config-chip">Topic: <strong>{config.category}</strong></span>
-              <span className="summary-config-chip">Difficulty: <strong>{config.difficulty}</strong></span>
-              <span className="summary-config-chip">Questions: <strong>{totalQuestions}</strong></span>
+          <div className="score-hero-box">
+            <div className="score-number-display">
+              <span className="score-big">{overallScore}</span>
+              <span className="score-max">/ 10</span>
             </div>
-          )}
+            <span className={`level-pill level-${perfLevel.classSuffix}`}>
+              {perfLevel.label}
+            </span>
+          </div>
+
+          {/* Configuration Summary Badges */}
+          <div className="summary-config-badges">
+            <span className="summary-config-chip">Topic: <strong>{config.category || 'General'}</strong></span>
+            <span className="summary-config-chip">Difficulty: <strong>{config.difficulty || 'Medium'}</strong></span>
+            <span className="summary-config-chip">Questions: <strong>{totalQuestions}</strong></span>
+            <span className="summary-config-chip">Date: <strong>{formattedDate}</strong></span>
+          </div>
 
           <div className="phase3-notice-badge">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="12" y1="16" x2="12" y2="12"></line>
               <line x1="12" y1="8" x2="12.01" y2="8"></line>
@@ -69,19 +84,15 @@ export default function InterviewSummary({ answers = [], config = {}, onRestart 
 
         {/* Dashboard Metric Grid */}
         <div className="dashboard-metrics-grid">
-          {/* Card 1: Overall Score */}
           <div className="metric-card metric-score">
             <span className="metric-label">Overall Score</span>
             <div className="metric-value-container">
               <span className="metric-primary-val">{overallScore}</span>
               <span className="metric-denom">/ 10</span>
             </div>
-            <div className="metric-footer-badge">
-              Average Evaluation
-            </div>
+            <div className="metric-footer-badge">Average Evaluation</div>
           </div>
 
-          {/* Card 2: Performance % */}
           <div className="metric-card metric-percentage">
             <span className="metric-label">Performance</span>
             <div className="metric-value-container">
@@ -95,19 +106,15 @@ export default function InterviewSummary({ answers = [], config = {}, onRestart 
             </div>
           </div>
 
-          {/* Card 3: Questions Completed */}
           <div className="metric-card metric-questions">
-            <span className="metric-label">Questions</span>
+            <span className="metric-label">Questions Completed</span>
             <div className="metric-value-container">
               <span className="metric-primary-val">{totalQuestions}</span>
               <span className="metric-denom">/ {totalQuestions}</span>
             </div>
-            <div className="metric-footer-badge">
-              100% Completed
-            </div>
+            <div className="metric-footer-badge">100% Complete</div>
           </div>
 
-          {/* Card 4: Performance Level */}
           <div className="metric-card metric-level">
             <span className="metric-label">Performance Level</span>
             <div className="metric-value-container">
@@ -115,9 +122,7 @@ export default function InterviewSummary({ answers = [], config = {}, onRestart 
                 {perfLevel.label}
               </span>
             </div>
-            <div className="metric-footer-badge">
-              Evaluation Rating
-            </div>
+            <div className="metric-footer-badge">AI Rating</div>
           </div>
         </div>
 
@@ -129,6 +134,16 @@ export default function InterviewSummary({ answers = [], config = {}, onRestart 
           >
             {showDetails ? 'Hide Detailed Breakdown' : 'View Detailed Breakdown'}
           </button>
+          
+          {onGoToHistory && (
+            <button 
+              className="btn-secondary" 
+              onClick={onGoToHistory}
+            >
+              View History
+            </button>
+          )}
+
           <button 
             id="restart-interview-btn" 
             className="btn-primary" 
@@ -141,7 +156,7 @@ export default function InterviewSummary({ answers = [], config = {}, onRestart 
         {/* Detailed Question Results List */}
         {showDetails && (
           <div className="summary-list">
-            <h3 className="summary-list-title">Question-wise Results ({answers.length})</h3>
+            <h3 className="summary-list-title">Performance Overview ({answers.length} Questions)</h3>
 
             {answers.map((item, index) => {
               const rating = getRatingBadge(item.score || 0);

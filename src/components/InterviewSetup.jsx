@@ -77,6 +77,29 @@ export default function InterviewSetup({
 
   return (
     <main className="setup-wrapper">
+      {/* Setup Stepper Bar */}
+      <div className="setup-stepper">
+        <div className={`stepper-step ${topic ? 'completed' : 'active'}`}>
+          <span className="step-num">01</span>
+          <span className="step-text">Topic</span>
+        </div>
+        <div className="stepper-line"></div>
+        <div className={`stepper-step ${difficulty ? 'completed' : ''}`}>
+          <span className="step-num">02</span>
+          <span className="step-text">Difficulty</span>
+        </div>
+        <div className="stepper-line"></div>
+        <div className={`stepper-step ${questionCount ? 'completed' : ''}`}>
+          <span className="step-num">03</span>
+          <span className="step-text">Questions</span>
+        </div>
+        <div className="stepper-line"></div>
+        <div className={`stepper-step ${!isInsufficient ? 'ready' : ''}`}>
+          <span className="step-num">04</span>
+          <span className="step-text">Start</span>
+        </div>
+      </div>
+
       <div className="setup-card">
         <div className="setup-header">
           <div className="setup-icon-badge">
@@ -85,47 +108,46 @@ export default function InterviewSetup({
               <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
             </svg>
           </div>
-          <h1 className="setup-title">Interview Setup</h1>
+          <h1 className="setup-title">Configure Your Interview</h1>
           <p className="setup-subtitle">
-            Configure your technical interview topic, difficulty level, and question volume.
+            Select your technical domain, difficulty level, and question count to launch your mock interview.
           </p>
-          <div className="setup-availability-badge" style={{ marginTop: '0.75rem', fontSize: '0.9rem', color: '#a78bfa', fontWeight: '500' }}>
-            Available Questions: <strong>{availableCount}+</strong>
+          <div className="setup-availability-badge">
+            <span className="badge-dot"></span>
+            <span>Available Matching Questions: <strong>{availableCount}</strong></span>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="setup-form">
-          {/* Topic / Category Selection */}
+          {/* Step 1: Topic Selection Cards */}
           <div className="setup-form-group">
-            <label htmlFor="topic-select" className="setup-label">
-              <span>Select Topic</span>
-              <span className="step-badge">Step 1</span>
+            <label className="setup-label">
+              <span>01 — Select Topic</span>
+              <span className="step-badge">Topic</span>
             </label>
-            <div className="select-wrapper">
-              <select 
-                id="topic-select"
-                value={topic} 
-                onChange={(e) => {
-                  setTopic(e.target.value);
-                  setValidationMsg('');
-                }}
-                className="setup-select"
-                disabled={isLoading}
-              >
-                {TOPICS.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
+            <div className="topic-grid">
+              {TOPICS.map((cat) => (
+                <button
+                  type="button"
+                  key={cat}
+                  className={`topic-card-btn ${topic === cat ? 'active' : ''}`}
+                  onClick={() => {
+                    setTopic(cat);
+                    setValidationMsg('');
+                  }}
+                  disabled={isLoading}
+                >
+                  <span className="topic-name">{cat}</span>
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Difficulty Selection */}
+          {/* Step 2: Difficulty Selection */}
           <div className="setup-form-group">
             <label className="setup-label">
-              <span>Select Difficulty</span>
-              <span className="step-badge">Step 2</span>
+              <span>02 — Select Difficulty</span>
+              <span className="step-badge">Difficulty</span>
             </label>
             <div className="segmented-control">
               {DIFFICULTIES.map((diff) => (
@@ -145,11 +167,11 @@ export default function InterviewSetup({
             </div>
           </div>
 
-          {/* Question Count Selection */}
+          {/* Step 3: Question Count Selection */}
           <div className="setup-form-group">
             <label className="setup-label">
-              <span>Number of Questions</span>
-              <span className="step-badge">Step 3</span>
+              <span>03 — Number of Questions</span>
+              <span className="step-badge">Volume</span>
             </label>
             <div className="segmented-control count-control">
               {QUESTION_COUNTS.map((num) => {
@@ -164,7 +186,6 @@ export default function InterviewSetup({
                       setValidationMsg('');
                     }}
                     disabled={isLoading}
-                    title={!countAvailable ? `Only ${availableCount} available` : ''}
                   >
                     {num} Questions {!countAvailable && `(${availableCount} avail)`}
                   </button>
@@ -175,8 +196,8 @@ export default function InterviewSetup({
 
           {/* Validation Error Messages */}
           {activeError && (
-            <div className="validation-error-msg" role="alert" style={{ justifyContent: 'center', margin: '1rem 0' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <div className="validation-error-msg" role="alert">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="12" y1="8" x2="12" y2="12"></line>
                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -185,10 +206,10 @@ export default function InterviewSetup({
             </div>
           )}
 
-          {/* Warning Message if available count < requested count */}
+          {/* Warning Message if any */}
           {warning && !activeError && (
-            <div className="setup-warning-msg" role="status" style={{ justifyContent: 'center', margin: '0.75rem 0' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <div className="setup-warning-msg" role="status">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
                 <line x1="12" y1="9" x2="12" y2="13"></line>
                 <line x1="12" y1="17" x2="12.01" y2="17"></line>
@@ -204,13 +225,7 @@ export default function InterviewSetup({
               className="btn-primary btn-start-interview"
               disabled={isLoading || isInsufficient}
             >
-              <span>{isLoading ? 'Preparing Questions...' : 'Start Interview'}</span>
-              {!isLoading && (
-                <svg className="btn-icon-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                  <polyline points="12 5 19 12 12 19"></polyline>
-                </svg>
-              )}
+              <span>{isLoading ? 'Preparing Questions...' : 'Start Mock Interview →'}</span>
             </button>
           </div>
         </form>

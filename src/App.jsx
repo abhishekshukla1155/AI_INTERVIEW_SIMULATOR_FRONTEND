@@ -3,6 +3,7 @@ import { fetchQuestions } from './services/api';
 import { questions as localQuestions } from './data/questions';
 import { filterAndSelectQuestions } from './utils/questionSelector';
 import { saveInterviewHistory, getInterviewHistory } from './utils/interviewHistory';
+import Navbar from './components/Navbar';
 import WelcomeScreen from './components/WelcomeScreen';
 import InterviewSetup from './components/InterviewSetup';
 import InterviewScreen from './components/InterviewScreen';
@@ -33,6 +34,12 @@ export default function App() {
   useEffect(() => {
     refreshHistoryCount();
   }, [viewState]);
+
+  const handleGoToHome = () => {
+    setFetchError('');
+    setSetupWarning('');
+    setViewState('welcome');
+  };
 
   const handleGoToSetup = () => {
     setFetchError('');
@@ -205,63 +212,32 @@ export default function App() {
         <div className="bg-orb bg-orb-3"></div>
       </div>
 
-      {/* Navigation Header */}
-      <header className="navbar">
-        <div className="brand" onClick={handleExitInterview} style={{ cursor: 'pointer' }}>
-          <div className="brand-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2a8 8 0 0 0-8 8c0 1.5.4 2.9 1.1 4.1L4 20l5.9-1.1c1.2.7 2.6 1.1 4.1 1.1a8 8 0 0 0 8-8 8 8 0 0 0-8-8z"/>
-              <path d="M9.5 9h5"/>
-              <path d="M9.5 13h3"/>
-            </svg>
-          </div>
-          <span>AI Interviewer</span>
-        </div>
-
-        <div className="nav-controls" style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-          {viewState !== 'interview' && (
-            <button
-              id="view-history-btn"
-              type="button"
-              className={`btn-secondary ${viewState === 'history' ? 'active' : ''}`}
-              onClick={handleGoToHistory}
-              style={{ fontSize: '0.85rem', padding: '0.45rem 0.9rem' }}
-            >
-              📜 History ({historyCount})
-            </button>
-          )}
-
-          <div className="backend-status-badge">
-            <span className="pulse-dot"></span>
-            <span>
-              {viewState === 'interview' ? `Question ${currentQuestionIndex + 1} / ${activeQuestions.length}` : 'AI Backend Ready'}
-            </span>
-          </div>
-        </div>
-      </header>
+      {/* Professional Navbar */}
+      <Navbar 
+        currentView={viewState}
+        onNavigateHome={handleGoToHome}
+        onNavigateSetup={handleGoToSetup}
+        onNavigateHistory={handleGoToHistory}
+        historyCount={historyCount}
+      />
 
       {/* Dynamic Views */}
       {viewState === 'welcome' && (
-        <>
-          <WelcomeScreen 
-            onStartInterview={handleGoToSetup} 
-            isLoading={isLoadingQuestions}
-            error={fetchError}
-          />
-          <InterviewHistory onRefreshHistory={refreshHistoryCount} />
-        </>
+        <WelcomeScreen 
+          onStartInterview={handleGoToSetup} 
+          onGoToHistory={handleGoToHistory}
+          isLoading={isLoadingQuestions}
+          error={fetchError}
+        />
       )}
 
       {viewState === 'setup' && (
-        <>
-          <InterviewSetup
-            onStartInterview={handleStartInterview}
-            isLoading={isLoadingQuestions}
-            error={fetchError}
-            warning={setupWarning}
-          />
-          <InterviewHistory onRefreshHistory={refreshHistoryCount} />
-        </>
+        <InterviewSetup
+          onStartInterview={handleStartInterview}
+          isLoading={isLoadingQuestions}
+          error={fetchError}
+          warning={setupWarning}
+        />
       )}
 
       {viewState === 'interview' && activeQuestions.length > 0 && (
@@ -278,14 +254,12 @@ export default function App() {
       )}
 
       {viewState === 'summary' && (
-        <>
-          <InterviewSummary
-            answers={results}
-            config={interviewConfig}
-            onRestart={handleRestartInterview}
-          />
-          <InterviewHistory onRefreshHistory={refreshHistoryCount} />
-        </>
+        <InterviewSummary
+          answers={results}
+          config={interviewConfig}
+          onRestart={handleRestartInterview}
+          onGoToHistory={handleGoToHistory}
+        />
       )}
 
       {viewState === 'history' && (
@@ -300,7 +274,7 @@ export default function App() {
               className="btn-primary" 
               onClick={handleGoToSetup}
             >
-              Start New Interview
+              Start New Interview →
             </button>
           </div>
         </main>
