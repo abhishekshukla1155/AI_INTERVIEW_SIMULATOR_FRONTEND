@@ -1,18 +1,21 @@
+import logo from '../assets/intervaiq-logo.png';
+
 export default function HeroSection({ onStartInterview, onGoToHistory, isLoading, error }) {
   return (
     <section className="hero-section">
       <div className="hero-badge">
+        <img src={logo} alt="IntervAIQ Logo" className="hero-badge-logo" />
         <span className="badge-pulse"></span>
-        <span className="badge-text">Powered by DistilBERT &amp; FastAPI</span>
+        <span className="badge-text">IntervAIQ • AI-Powered Interview Simulator</span>
       </div>
 
       <h1 className="hero-heading">
         Practice Smarter.<br />
-        <span className="gradient-text">Interview Better.</span>
+        <span className="gradient-text">Master Your Interview.</span>
       </h1>
 
       <p className="hero-description">
-        Practice technical interviews with AI-powered evaluation, semantic answer analysis, and instant feedback designed to help you improve with every attempt.
+        Elevate your technical career with IntervAIQ. Practice real-world Machine Learning, Python, and NLP interview questions evaluated by fine-tuned semantic AI.
       </p>
 
       <div className="hero-cta-group">
@@ -49,11 +52,11 @@ export default function HeroSection({ onStartInterview, onGoToHistory, isLoading
       )}
 
       <div className="hero-trust-bar">
-        <span className="trust-item">⚡ Semantic AI</span>
+        <span className="trust-item">⚡ Semantic AI Scoring</span>
         <span className="trust-divider">•</span>
-        <span className="trust-item">🎯 Real-time evaluation</span>
+        <span className="trust-item">🎯 Instant Feedback</span>
         <span className="trust-divider">•</span>
-        <span className="trust-item">📈 Personalized feedback</span>
+        <span className="trust-item">📈 Progress Tracking</span>
       </div>
     </section>
   );

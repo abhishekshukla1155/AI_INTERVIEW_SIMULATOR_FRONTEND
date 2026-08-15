@@ -9,6 +9,7 @@ import InterviewSetup from './components/InterviewSetup';
 import InterviewScreen from './components/InterviewScreen';
 import InterviewSummary from './components/InterviewSummary';
 import InterviewHistory from './components/InterviewHistory';
+import Footer from './components/Footer';
 import './App.css';
 
 export default function App() {
@@ -280,10 +281,14 @@ export default function App() {
         </main>
       )}
 
-      {/* Footer */}
-      <footer className="footer">
-        <p>AI Interview Simulator • React + Vite Frontend • FastAPI + DistilBERT Backend</p>
-      </footer>
+      {/* Conditional Footer (hidden during active interview) */}
+      {viewState !== 'interview' && (
+        <Footer 
+          onNavigateHome={handleGoToHome}
+          onNavigateSetup={handleGoToSetup}
+          onNavigateHistory={handleGoToHistory}
+        />
+      )}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import logo from '../assets/intervaiq-logo.png';
 export default function Navbar({
   currentView,
   onNavigateHome,
@@ -8,14 +9,8 @@ export default function Navbar({
   return (
     <header className="navbar">
       <div className="nav-brand" onClick={onNavigateHome} style={{ cursor: 'pointer' }}>
-        <div className="brand-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2a8 8 0 0 0-8 8c0 1.5.4 2.9 1.1 4.1L4 20l5.9-1.1c1.2.7 2.6 1.1 4.1 1.1a8 8 0 0 0 8-8 8 8 0 0 0-8-8z"/>
-            <path d="M9.5 9h5"/>
-            <path d="M9.5 13h3"/>
-          </svg>
-        </div>
-        <span className="brand-text">AI Interviewer</span>
+          <img src={logo} alt="IntervAIQ Logo" className="brand-logo" style={{ width: '24px', height: '24px', marginRight: '8px' }} />
+          <span className="brand-text">IntervAIQ</span>
       </div>
 
       <nav className="nav-links">
@@ -48,10 +43,10 @@ export default function Navbar({
       </nav>
 
       <div className="nav-controls">
-        <div className="backend-status-badge">
-          <span className="pulse-dot"></span>
-          <span>AI Engine Ready</span>
-        </div>
+          <div className="backend-status-badge">
+            <span className="pulse-dot"></span>
+            <span>AI Evaluation Ready</span>
+          </div>
       </div>
     </header>
   );
