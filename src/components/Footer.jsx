@@ -1,6 +1,6 @@
 import logo from '../assets/intervaiq-logo.png';
 
-export default function Footer({ onNavigateHome, onNavigateSetup, onNavigateHistory }) {
+export default function Footer({ onNavigateHome, onNavigateSetup, onNavigateHistory, onNavigateResources }) {
   return (
     <footer className="intervaiq-footer">
       <div className="footer-content">
@@ -32,16 +32,21 @@ export default function Footer({ onNavigateHome, onNavigateSetup, onNavigateHist
                 Interview History
               </button>
             </li>
+            <li>
+              <button type="button" className="footer-link-btn" onClick={onNavigateResources}>
+                Learning Hub
+              </button>
+            </li>
           </ul>
         </div>
 
         <div className="footer-links-col">
           <h4 className="footer-heading">Topics</h4>
           <ul className="footer-links">
-            <li><span className="footer-static-link">Machine Learning</span></li>
-            <li><span className="footer-static-link">Python Programming</span></li>
-            <li><span className="footer-static-link">Natural Language Processing</span></li>
-            <li><span className="footer-static-link">Data Science &amp; AI</span></li>
+            <li><span className="footer-static-link" onClick={onNavigateResources} style={{ cursor: 'pointer' }}>Machine Learning</span></li>
+            <li><span className="footer-static-link" onClick={onNavigateResources} style={{ cursor: 'pointer' }}>Python Programming</span></li>
+            <li><span className="footer-static-link" onClick={onNavigateResources} style={{ cursor: 'pointer' }}>Natural Language Processing</span></li>
+            <li><span className="footer-static-link" onClick={onNavigateResources} style={{ cursor: 'pointer' }}>DBMS &amp; SQL</span></li>
           </ul>
         </div>
 

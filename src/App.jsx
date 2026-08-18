@@ -10,6 +10,7 @@ import InterviewScreen from './components/InterviewScreen';
 import InterviewSummary from './components/InterviewSummary';
 import InterviewHistory from './components/InterviewHistory';
 import Footer from './components/Footer';
+import ResourcesHub from './components/ResourcesHub';
 import './App.css';
 
 export default function App() {
@@ -50,6 +51,10 @@ export default function App() {
 
   const handleGoToHistory = () => {
     setViewState('history');
+  };
+
+  const handleGoToResources = () => {
+    setViewState('resources');
   };
 
   const handleStartInterview = async ({ category, difficulty, count }) => {
@@ -219,6 +224,7 @@ export default function App() {
         onNavigateHome={handleGoToHome}
         onNavigateSetup={handleGoToSetup}
         onNavigateHistory={handleGoToHistory}
+        onNavigateResources={handleGoToResources}
         historyCount={historyCount}
       />
 
@@ -281,12 +287,19 @@ export default function App() {
         </main>
       )}
 
+      {viewState === 'resources' && (
+        <ResourcesHub 
+          onStartInterview={handleGoToSetup}
+        />
+      )}
+
       {/* Conditional Footer (hidden during active interview) */}
       {viewState !== 'interview' && (
         <Footer 
           onNavigateHome={handleGoToHome}
           onNavigateSetup={handleGoToSetup}
           onNavigateHistory={handleGoToHistory}
+          onNavigateResources={handleGoToResources}
         />
       )}
     </div>
