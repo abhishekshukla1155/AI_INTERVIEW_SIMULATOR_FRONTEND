@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { fetchQuestions } from './services/api';
+import { useState, useEffect, useRef } from 'react';
+import { fetchQuestions, saveInterview } from './services/api';
 import { questions as localQuestions } from './data/questions';
 import { filterAndSelectQuestions } from './utils/questionSelector';
 import { saveInterviewHistory, getInterviewHistory } from './utils/interviewHistory';
@@ -28,6 +28,9 @@ export default function App() {
   const [fetchError, setFetchError] = useState('');
   const [setupWarning, setSetupWarning] = useState('');
   const [historyCount, setHistoryCount] = useState(0);
+
+  // Ref guard to prevent saving the same interview session multiple times
+  const savedSessionsRef = useRef(new Set());
 
   // Sync history count
   const refreshHistoryCount = () => {
@@ -190,6 +193,23 @@ export default function App() {
 
       saveInterviewHistory(historyRecord);
       refreshHistoryCount();
+
+      // ── Save to Supabase DB via FastAPI (Guarded to save ONCE per session) ──
+      const activeSessionId = currentSessionId || historyRecord.id;
+      if (activeSessionId && !savedSessionsRef.current.has(activeSessionId)) {
+        savedSessionsRef.current.add(activeSessionId);
+        saveInterview({
+          topic: interviewConfig.category,
+          difficulty: interviewConfig.difficulty,
+          question_count: activeQuestions.length,
+          score: roundedScore
+        }).then((res) => {
+          console.log('[Supabase Sync]', 'Interview saved successfully:', res);
+        }).catch((err) => {
+          console.warn('[Supabase Sync Warning]', 'Could not sync interview result to database:', err.message);
+        });
+      }
+
       setViewState('summary');
     }
   };

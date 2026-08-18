@@ -56,3 +56,33 @@ export async function fetchQuestions() {
   }
   return data;
 }
+
+/**
+ * Sends a POST request to FastAPI /interviews endpoint to persist completed interview summary in Supabase.
+ * @param {{topic: string, difficulty: string, question_count: number, score: number}} interviewData
+ * @returns {Promise<{success: boolean, message: string, data: any}>}
+ */
+export async function saveInterview(interviewData) {
+  const payload = {
+    topic: interviewData.topic,
+    difficulty: interviewData.difficulty,
+    question_count: Number(interviewData.question_count || interviewData.questionCount || 0),
+    score: Number(interviewData.score || 0),
+  };
+
+  const response = await fetch(`${API_BASE_URL}/interviews`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to save interview: ${response.status} ${errorText}`);
+  }
+
+  return await response.json();
+}
+
