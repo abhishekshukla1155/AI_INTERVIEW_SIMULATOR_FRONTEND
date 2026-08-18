@@ -1,27 +1,27 @@
 export const socialLinks = [
   {
     name: "LinkedIn",
-    url: "https://www.linkedin.com/",
+    url: "#",
     icon: "linkedin"
   },
   {
     name: "GitHub",
-    url: "https://github.com/",
+    url: "#",
     icon: "github"
   },
   {
     name: "YouTube",
-    url: "https://www.youtube.com/",
+    url: "#",
     icon: "youtube"
   },
   {
     name: "X",
-    url: "https://x.com/",
+    url: "#",
     icon: "x"
   },
   {
     name: "Discord",
-    url: "https://discord.com/",
+    url: "#",
     icon: "discord"
   }
 ];

@@ -92,9 +92,10 @@ export default function Footer({
               {footerLinksData.socials.map((social) => (
                 <a
                   key={social.name}
-                  href={social.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={social.url || '#'}
+                  onClick={(e) => {
+                    if (social.url === '#') e.preventDefault();
+                  }}
                   className="social-icon-btn"
                   aria-label={social.name}
                 >
