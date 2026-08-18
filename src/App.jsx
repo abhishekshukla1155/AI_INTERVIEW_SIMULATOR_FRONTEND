@@ -11,6 +11,8 @@ import InterviewSummary from './components/InterviewSummary';
 import InterviewHistory from './components/InterviewHistory';
 import Footer from './components/Footer';
 import ResourcesHub from './components/ResourcesHub';
+import AnalyticsView from './components/AnalyticsView';
+import AboutView from './components/AboutView';
 import './App.css';
 
 export default function App() {
@@ -55,6 +57,14 @@ export default function App() {
 
   const handleGoToResources = () => {
     setViewState('resources');
+  };
+
+  const handleGoToAnalytics = () => {
+    setViewState('analytics');
+  };
+
+  const handleGoToAbout = () => {
+    setViewState('about');
   };
 
   const handleStartInterview = async ({ category, difficulty, count }) => {
@@ -224,7 +234,9 @@ export default function App() {
         onNavigateHome={handleGoToHome}
         onNavigateSetup={handleGoToSetup}
         onNavigateHistory={handleGoToHistory}
+        onNavigateAnalytics={handleGoToAnalytics}
         onNavigateResources={handleGoToResources}
+        onNavigateAbout={handleGoToAbout}
         historyCount={historyCount}
       />
 
@@ -293,13 +305,28 @@ export default function App() {
         />
       )}
 
+      {viewState === 'analytics' && (
+        <AnalyticsView 
+          onStartInterview={handleGoToSetup}
+        />
+      )}
+
+      {viewState === 'about' && (
+        <AboutView 
+          onStartInterview={handleGoToSetup}
+          onGoToResources={handleGoToResources}
+        />
+      )}
+
       {/* Conditional Footer (hidden during active interview) */}
       {viewState !== 'interview' && (
         <Footer 
           onNavigateHome={handleGoToHome}
           onNavigateSetup={handleGoToSetup}
           onNavigateHistory={handleGoToHistory}
+          onNavigateAnalytics={handleGoToAnalytics}
           onNavigateResources={handleGoToResources}
+          onNavigateAbout={handleGoToAbout}
         />
       )}
     </div>
