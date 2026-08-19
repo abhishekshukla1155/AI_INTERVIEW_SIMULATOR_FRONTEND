@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getInterviewHistoryApi } from '../services/api';
-import { getInterviewHistory as getLocalHistory, clearInterviewHistory } from '../utils/interviewHistory';
 
-export default function InterviewHistory({ onClose, onRefreshHistory }) {
+export default function InterviewHistory({ onClose }) {
   const [historyList, setHistoryList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -22,26 +21,13 @@ export default function InterviewHistory({ onClose, onRefreshHistory }) {
           date: item.completed_at,
           maxScore: 10
         }));
-
-        if (formattedDbList.length > 0) {
-          setHistoryList(formattedDbList);
-        } else {
-          // Fallback to local storage if DB returns empty
-          const localList = getLocalHistory();
-          setHistoryList(localList);
-        }
+        setHistoryList(formattedDbList);
       } else {
-        const localList = getLocalHistory();
-        setHistoryList(localList);
+        setHistoryList([]);
       }
     } catch (err) {
       console.warn("Could not fetch interview history from Supabase backend:", err.message);
-      const localList = getLocalHistory();
-      if (localList && localList.length > 0) {
-        setHistoryList(localList);
-      } else {
-        setError("Unable to load interview history. Please try again.");
-      }
+      setError("Unable to load interview history. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -50,16 +36,6 @@ export default function InterviewHistory({ onClose, onRefreshHistory }) {
   useEffect(() => {
     fetchHistory();
   }, [fetchHistory]);
-
-  const handleClear = () => {
-    if (window.confirm('Are you sure you want to clear your local interview history? This action cannot be undone.')) {
-      clearInterviewHistory();
-      setHistoryList([]);
-      if (onRefreshHistory) {
-        onRefreshHistory();
-      }
-    }
-  };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
@@ -106,16 +82,6 @@ export default function InterviewHistory({ onClose, onRefreshHistory }) {
           </div>
 
           <div className="history-header-actions">
-            {historyList.length > 0 && (
-              <button 
-                id="clear-history-btn"
-                type="button" 
-                className="btn-danger-outline" 
-                onClick={handleClear}
-              >
-                Clear History
-              </button>
-            )}
             {onClose && (
               <button 
                 type="button" 
@@ -195,4 +161,5 @@ export default function InterviewHistory({ onClose, onRefreshHistory }) {
     </div>
   );
 }
+
 

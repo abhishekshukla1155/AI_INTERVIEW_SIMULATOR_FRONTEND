@@ -14,7 +14,7 @@ export default function FAQAccordion() {
     },
     {
       q: "Is my interview history saved securely?",
-      a: "Yes! All completed interview attempts are saved locally in your browser's localStorage. You can view your past scores, topics, and dates anytime from the History tab."
+      a: "Yes! All completed interview attempts are saved securely in your persistent database history. You can view your past scores, topics, and dates anytime from the History tab."
     },
     {
       q: "Can I choose the length of my interview session?",
