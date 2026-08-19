@@ -86,3 +86,19 @@ export async function saveInterview(interviewData) {
   return await response.json();
 }
 
+/**
+ * Fetches completed interview records from FastAPI GET /interviews endpoint.
+ * @returns {Promise<{success: boolean, data: Array<{id: number, topic: string, difficulty: string, question_count: number, score: number, completed_at: string}>}>}
+ */
+export async function getInterviewHistoryApi() {
+  const response = await fetch(`${API_BASE_URL}/interviews`);
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to fetch interview history: ${response.status} ${errorText}`);
+  }
+
+  return await response.json();
+}
+
+

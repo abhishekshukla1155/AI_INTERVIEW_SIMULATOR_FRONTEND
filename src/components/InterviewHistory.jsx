@@ -1,15 +1,58 @@
-import { useState, useEffect } from 'react';
-import { getInterviewHistory, clearInterviewHistory } from '../utils/interviewHistory';
+import { useState, useEffect, useCallback } from 'react';
+import { getInterviewHistoryApi } from '../services/api';
+import { getInterviewHistory as getLocalHistory, clearInterviewHistory } from '../utils/interviewHistory';
 
 export default function InterviewHistory({ onClose, onRefreshHistory }) {
   const [historyList, setHistoryList] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    setHistoryList(getInterviewHistory());
+  const fetchHistory = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await getInterviewHistoryApi();
+      if (res && res.success && Array.isArray(res.data)) {
+        const formattedDbList = res.data.map((item) => ({
+          id: item.id,
+          topic: item.topic,
+          difficulty: item.difficulty,
+          questionCount: item.question_count,
+          score: typeof item.score === 'number' ? Number(item.score.toFixed(1)) : item.score,
+          date: item.completed_at,
+          maxScore: 10
+        }));
+
+        if (formattedDbList.length > 0) {
+          setHistoryList(formattedDbList);
+        } else {
+          // Fallback to local storage if DB returns empty
+          const localList = getLocalHistory();
+          setHistoryList(localList);
+        }
+      } else {
+        const localList = getLocalHistory();
+        setHistoryList(localList);
+      }
+    } catch (err) {
+      console.warn("Could not fetch interview history from Supabase backend:", err.message);
+      const localList = getLocalHistory();
+      if (localList && localList.length > 0) {
+        setHistoryList(localList);
+      } else {
+        setError("Unable to load interview history. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
+
   const handleClear = () => {
-    if (window.confirm('Are you sure you want to clear your entire interview history? This action cannot be undone.')) {
+    if (window.confirm('Are you sure you want to clear your local interview history? This action cannot be undone.')) {
       clearInterviewHistory();
       setHistoryList([]);
       if (onRefreshHistory) {
@@ -19,6 +62,7 @@ export default function InterviewHistory({ onClose, onRefreshHistory }) {
   };
 
   const formatDate = (dateStr) => {
+    if (!dateStr) return '';
     try {
       const d = new Date(dateStr);
       if (isNaN(d.getTime())) return dateStr;
@@ -85,7 +129,32 @@ export default function InterviewHistory({ onClose, onRefreshHistory }) {
           </div>
         </div>
 
-        {historyList.length === 0 ? (
+        {isLoading ? (
+          <div className="history-empty-state" style={{ padding: '3rem 1rem' }}>
+            <div className="empty-icon-circle">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <h3 className="empty-title">Loading interview history...</h3>
+          </div>
+        ) : error ? (
+          <div className="history-empty-state" style={{ padding: '3rem 1rem' }}>
+            <div className="empty-icon-circle" style={{ color: '#ef4444' }}>
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </div>
+            <h3 className="empty-title">{error}</h3>
+            <p className="empty-description">Could not connect to database backend.</p>
+            <button type="button" className="btn-secondary" style={{ marginTop: '1rem' }} onClick={fetchHistory}>
+              Retry
+            </button>
+          </div>
+        ) : historyList.length === 0 ? (
           <div className="history-empty-state">
             <div className="empty-icon-circle">
               <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -97,7 +166,7 @@ export default function InterviewHistory({ onClose, onRefreshHistory }) {
               </svg>
             </div>
             <h3 className="empty-title">No interview history yet.</h3>
-            <p className="empty-description">Complete an interview to see your results here.</p>
+            <p className="empty-description">Complete your first mock interview to see your results here.</p>
           </div>
         ) : (
           <div className="history-list">
@@ -126,3 +195,4 @@ export default function InterviewHistory({ onClose, onRefreshHistory }) {
     </div>
   );
 }
+
