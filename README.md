@@ -105,7 +105,6 @@ AI_INTERVIEW_FRONTEND/
    npm run dev
    ```
 
-5. Open your browser and go to `http://localhost:5173`.
 
 ## Environment Variables
 
@@ -119,15 +118,7 @@ Do not commit real API keys, Supabase credentials, or secret tokens into public 
 
 ## Deployment
 
-The frontend is deployed as a Render Static Site. Render installs the dependencies, builds the Vite application, and publishes the generated `dist` directory.
-
-**Frontend:** https://intervaiq-frontend-vvt7.onrender.com
-
-The FastAPI backend is deployed separately on Render:
-
-**Backend:** https://intervaiq-backend.onrender.com
-
-The frontend communicates with the backend through the `VITE_API_URL` environment variable, which is configured in the Render environment rather than hard-coded into the production deployment.
+The frontend is deployed on **Render** as a static site web service built using Vite (`npm run build`). The FastAPI backend is hosted separately, and `VITE_API_URL` is set in Render's environment settings to point to the live backend URL.
 
 ## Future Improvements
 
